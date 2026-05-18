@@ -373,10 +373,13 @@ class OpenAIChatClient:
             first = choices[0]
             if isinstance(first, dict):
                 message = first.get("message")
-                if isinstance(message, dict) and isinstance(message.get("content"), str):
-                    return message["content"].strip()
-                if isinstance(first.get("text"), str):
-                    return first["text"].strip()
+                if isinstance(message, dict):
+                    content = message.get("content")
+                    if isinstance(content, str):
+                        return content.strip()
+                text = first.get("text")
+                if isinstance(text, str):
+                    return text.strip()
         raise OllamaError("OpenAI-compatible endpoint did not return chat content")
 
 

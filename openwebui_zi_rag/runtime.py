@@ -160,12 +160,15 @@ def make_ollama_client(
             client_cls = getattr(server_module, "OllamaClient", OllamaClient)
     except Exception:
         client_cls = OllamaClient
-    return make_generation_client(
-        cfg,
-        request_timeout=resolved_request_timeout,
-        connect_timeout=connect_timeout,
-        stream_idle_timeout=stream_idle_timeout,
-        ollama_client_cls=client_cls,
+    return cast(
+        OllamaClient,
+        make_generation_client(
+            cfg,
+            request_timeout=resolved_request_timeout,
+            connect_timeout=connect_timeout,
+            stream_idle_timeout=stream_idle_timeout,
+            ollama_client_cls=client_cls,
+        ),
     )
 
 

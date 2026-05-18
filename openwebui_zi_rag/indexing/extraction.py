@@ -647,7 +647,7 @@ def extract_msg(path: Path, config: Any = None, depth: int = 0) -> str:
         paths = [Path(candidate) for candidate in candidates if isinstance(candidate, (str, os.PathLike))]
         return [candidate for candidate in paths if candidate.exists() and candidate.is_file()]
 
-    message = extract_msg_lib.Message(str(path))
+    message = extract_msg_lib.Message(str(path))  # type: ignore[no-untyped-call]
     try:
         parts = [f"MSG file: {path.name}"]
         header_fields = [

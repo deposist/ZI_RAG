@@ -35,7 +35,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r openwebui_zi_rag_requirements.txt
-          pip install ruff mypy
+          pip install ruff mypy httpx
 
       - name: Ruff
         run: ruff check openwebui_zi_rag/ openwebui_functions/ tools/ tests/
