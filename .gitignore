@@ -20,3 +20,7 @@ dist/
 build/
 *.egg-info/
 openwebui_zi_rag_bundle.zip
+
+# Internal review/planning notes (not for public repo)
+REVIEW_PLAN.md
+REVIEW_PROMPT*.md
