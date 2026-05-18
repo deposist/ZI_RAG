@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAG Knowledge Manager</title>
+  <link rel="stylesheet" href="/ui/assets/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>RAG Knowledge Manager</h1>
+      <p id="healthLine" data-i18n="health.checking">Проверка sidecar...</p>
+    </div>
+    <div class="top-actions">
+      <select id="embeddingModelSelect" title="Embedding model"></select>
+      <select id="languageSelect" title="Language" aria-label="Language">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+      </select>
+      <button id="refreshBtn" type="button" data-i18n="actions.refresh">Обновить</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel indexes-panel">
+      <div class="panel-head">
+        <h2 data-i18n="indexes.title">Индексы</h2>
+        <div class="index-actions">
+          <button id="newIndexBtn" type="button">+</button>
+          <button id="deleteIndexBtn" type="button" class="danger" disabled data-i18n="actions.delete">Удалить</button>
+        </div>
+      </div>
+      <form id="newIndexForm" class="stack is-hidden">
+        <input id="newIndexName" type="text" placeholder="Название индекса" data-i18n-placeholder="indexes.namePlaceholder">
+        <button type="submit" data-i18n="actions.create">Создать</button>
+      </form>
+      <div id="indexList" class="list"></div>
+    </aside>
+
+    <section class="panel documents-panel">
+      <div class="panel-head">
+        <div>
+          <h2 id="documentsTitle" data-i18n="documents.title">Документы</h2>
+          <p id="documentsHint" data-i18n="documents.chooseIndex">Выберите индекс</p>
+        </div>
+        <div class="doc-actions">
+          <label class="button-like">
+            <span data-i18n="actions.upload">Загрузить</span>
+            <input id="uploadInput" type="file" multiple hidden>
+          </label>
+          <button id="addPathBtn" type="button" data-i18n="actions.addPath">Добавить путь</button>
+          <button id="stopJobsBtn" type="button" class="danger" disabled data-i18n="jobs.stop">Остановить</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="documentSearch" type="search" placeholder="Поиск по документам" data-i18n-placeholder="documents.searchPlaceholder">
+        <select id="documentStatusFilter" title="Фильтр по статусу" data-i18n-title="documents.statusFilterTitle">
+          <option value="" data-i18n="documents.allStatuses">Все статусы</option>
+          <option value="indexed">indexed</option>
+          <option value="pending">pending</option>
+          <option value="extracting">extracting</option>
+          <option value="vectorizing">vectorizing</option>
+          <option value="failed">failed</option>
+          <option value="unindexed" data-i18n="documents.statusUnindexed">не indexed</option>
+        </select>
+        <span id="jobsLine" class="jobs-line" data-i18n="jobs.idle">Индексирование не запущено</span>
+        <button id="settingsBtn" type="button" data-i18n="settings.title">Настройки</button>
+      </div>
+
+      <div class="bulk-toolbar">
+        <label><input id="selectVisibleInput" type="checkbox"> <span data-i18n="documents.selectVisible">Выбрать видимые</span></label>
+        <button id="selectUnindexedBtn" type="button" disabled data-i18n="documents.unindexed">Неиндексированные</button>
+        <span id="selectedDocsLine" class="jobs-line">Выбрано: 0</span>
+        <button id="bulkReindexBtn" type="button" disabled data-i18n="actions.queue">В очередь</button>
+        <button id="bulkForceReindexBtn" type="button" class="danger" disabled data-i18n="actions.force">Принудительно</button>
+        <button id="bulkDeleteBtn" type="button" class="danger" disabled data-i18n="actions.delete">Удалить</button>
+        <button id="clearSelectionBtn" type="button" disabled data-i18n="actions.reset">Сбросить</button>
+        <button id="prevDocsBtn" type="button" disabled data-i18n="actions.prev">Назад</button>
+        <span id="documentPageLine" class="jobs-line">0–0 из 0</span>
+        <button id="nextDocsBtn" type="button" disabled data-i18n="actions.next">Вперёд</button>
+      </div>
+
+      <div id="pathForm" class="path-form is-hidden">
+        <input id="pathInput" type="text" placeholder="/allowed/root/docs">
+        <label><input id="recursiveInput" type="checkbox" checked> <span data-i18n="actions.recursive">Рекурсивно</span></label>
+        <button id="submitPathBtn" type="button" data-i18n="actions.add">Добавить</button>
+      </div>
+
+      <div id="documentList" class="doc-list"></div>
+    </section>
+
+    <aside class="panel details-panel">
+      <div id="detailsEmpty" class="empty" data-i18n="details.empty">Выберите документ</div>
+      <div id="detailsContent" class="is-hidden">
+        <h2 id="detailName"></h2>
+        <dl class="details-grid">
+          <dt data-i18n="details.status">Статус</dt><dd id="detailStatus"></dd>
+          <dt>Chunks</dt><dd id="detailChunks"></dd>
+          <dt>Hash</dt><dd id="detailHash"></dd>
+          <dt data-i18n="details.source">Источник</dt><dd id="detailSource"></dd>
+          <dt data-i18n="details.error">Ошибка</dt><dd id="detailError"></dd>
+        </dl>
+        <div class="detail-actions">
+          <button id="reindexBtn" type="button" data-i18n="actions.reindex">Переиндексировать</button>
+          <button id="deleteBtn" type="button" class="danger" data-i18n="actions.delete">Удалить</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="settings-card">
+      <div class="panel-head">
+        <h2 data-i18n="settings.title">Настройки</h2>
+        <button value="cancel" type="submit">×</button>
+      </div>
+      <label>Ollama URL <input id="ollamaUrlInput" type="url"></label>
+      <label>API key <input id="apiKeyInput" type="password" autocomplete="off"></label>
+      <label class="check-row"><input id="requireApiKeyLocalhostInput" type="checkbox"> Требовать API key для localhost (для multi-user машин)</label>
+      <h3>Embeddings</h3>
+      <div class="settings-grid">
+        <label>Provider
+          <select id="embeddingProviderInput">
+            <option value="ollama">Ollama</option>
+            <option value="openai">OpenAI-compatible</option>
+          </select>
+        </label>
+        <label>Embedding model <select id="embeddingModelInput"></select></label>
+        <label>Embedding API URL <input id="embeddingBaseUrlInput" type="url" placeholder="http://127.0.0.1:5010/v1"></label>
+        <label>Embedding API key <input id="embeddingApiKeyInput" type="password" autocomplete="off"></label>
+        <label>Embedding batch size <input id="embeddingBatchSizeInput" type="number" min="1" max="256"></label>
+        <label>Embedding cache dtype
+          <select id="embeddingCacheDtypeInput">
+            <option value="fp32">fp32</option>
+            <option value="fp16">fp16</option>
+          </select>
+        </label>
+      </div>
+      <label>Query prefix <textarea id="embeddingQueryPrefixInput" rows="2"></textarea></label>
+      <label>Document prefix <textarea id="embeddingDocumentPrefixInput" rows="2"></textarea></label>
+      <label>Индекс RAG по умолчанию <select id="defaultIndexSelect"></select></label>
+      <label>Storage <input id="storageDirInput" type="text"></label>
+      <label>Allowed source roots <textarea id="allowedRootsInput" rows="3"></textarea></label>
+      <h3>Индексирование</h3>
+      <div class="settings-grid">
+        <label>Целевой размер чанка <input id="chunkSizeInput" type="number" min="100"></label>
+        <label>Перекрытие, до символов <input id="chunkOverlapInput" type="number" min="0"></label>
+        <label>FAISS index type
+          <select id="indexTypeInput">
+            <option value="auto">Auto</option>
+            <option value="flat">Flat IP</option>
+            <option value="hnsw">HNSW IP</option>
+          </select>
+        </label>
+        <label>HNSW threshold chunks <input id="hnswThresholdInput" type="number" min="1"></label>
+        <label>HNSW M <input id="hnswMInput" type="number" min="1"></label>
+        <label>HNSW efConstruction <input id="hnswEfConstructionInput" type="number" min="1"></label>
+        <label>HNSW efSearch <input id="hnswEfSearchInput" type="number" min="1"></label>
+        <label>Direct API top K <input id="topKInput" type="number" min="1"></label>
+        <label>Score threshold <input id="scoreInput" type="number" min="0" max="1" step="0.01"></label>
+      </div>
+
+      <h3>OpenWebUI RAG</h3>
+      <div class="settings-toggles">
+        <label><input id="ragEnabledInput" type="checkbox"> RAG включён</label>
+        <label><input id="includeSourcesInput" type="checkbox"> Источники в ответе</label>
+        <label><input id="deepAnalysisEnabledInput" type="checkbox"> Auto deep для сложных вопросов</label>
+        <label><input id="deepFinalAnswerInput" type="checkbox"> Финальный ответ делает sidecar</label>
+        <label><input id="deepForceAllInput" type="checkbox"> Deep для каждого вопроса</label>
+        <label><input id="queryExpansionEnabledInput" type="checkbox"> LLM query expansion</label>
+      </div>
+      <div class="settings-grid">
+        <label>Chat retrieval top K <input id="retrievalTopKInput" type="number" min="1"></label>
+        <label>Max prompt chunks <input id="maxPromptChunksInput" type="number" min="1"></label>
+        <label>Adaptive score margin <input id="adaptiveScoreMarginInput" type="number" min="0" max="0.5" step="0.01"></label>
+        <label>Min query term hits <input id="minQueryTermHitsInput" type="number" min="0"></label>
+        <label>Query expansion model <select id="queryExpansionModelInput"></select></label>
+        <label>Query expansion variants <input id="queryExpansionMaxVariantsInput" type="number" min="1" max="8"></label>
+        <label>Query expansion tokens <input id="queryExpansionMaxTokensInput" type="number" min="16"></label>
+        <label>Rerank model <input id="rerankModelInput" type="text"></label>
+        <label>Rerank min results <input id="rerankMinResultsInput" type="number" min="1"></label>
+        <label>Rerank top N <input id="rerankTopNInput" type="number" min="1"></label>
+        <label>Max context chars <input id="maxContextCharsInput" type="number" min="4000"></label>
+        <label>Context batch chars <input id="contextBatchCharsInput" type="number" min="1500"></label>
+        <label>Max context batches <input id="maxContextBatchesInput" type="number" min="1"></label>
+        <label>Compact sources <input id="maxCompactSourcesInput" type="number" min="0"></label>
+      </div>
+      <label><input id="rerankEnabledInput" type="checkbox"> Cross-encoder rerank через OpenAI-compatible endpoint</label>
+      <label>Context template <textarea id="contextTemplateInput" rows="4"></textarea></label>
+
+      <h3>Chat Attachments</h3>
+      <div class="settings-toggles">
+        <label><input id="chatAttachmentsEnabledInput" type="checkbox"> Индексировать вложения чата</label>
+      </div>
+      <div class="settings-grid">
+        <label>Index prefix <input id="chatAttachmentIndexPrefixInput" type="text"></label>
+        <label>Max files <input id="chatAttachmentMaxFilesInput" type="number" min="1"></label>
+        <label>Max file MB <input id="chatAttachmentMaxFileMbInput" type="number" min="1"></label>
+        <label>Timeout sec <input id="chatAttachmentTimeoutInput" type="number" min="60"></label>
+      </div>
+
+      <h3>Deep RAG</h3>
+      <div class="settings-grid">
+        <label>Generation provider
+          <select id="deepGenerationProviderInput">
+            <option value="ollama">Ollama</option>
+            <option value="openai">OpenAI-compatible</option>
+          </select>
+        </label>
+        <label>Generation API URL <input id="deepGenerationBaseUrlInput" type="url" placeholder="http://127.0.0.1:8081/v1"></label>
+        <label>Generation API key <input id="deepGenerationApiKeyInput" type="password" autocomplete="off"></label>
+        <label>Generation model <select id="deepGenerationModelInput"></select></label>
+        <label>Deep top K <input id="deepTopKInput" type="number" min="1"></label>
+        <label>Max batches <input id="deepMaxBatchesInput" type="number" min="1"></label>
+        <label>Batch chars <input id="deepBatchCharsInput" type="number" min="1500"></label>
+        <label>Batch tokens <input id="deepBatchTokensInput" type="number" min="128"></label>
+        <label>Final tokens <input id="deepFinalTokensInput" type="number" min="256"></label>
+        <label>Timeout sec <input id="deepTimeoutInput" type="number" min="60"></label>
+      </div>
+      <label>Auto deep trigger phrases <textarea id="deepTriggerPhrasesInput" rows="4"></textarea></label>
+
+      <h3>Compliance Check</h3>
+      <div class="settings-toggles">
+        <label><input id="complianceEnabledInput" type="checkbox"> Проверка вложений включена</label>
+        <label><input id="complianceAutoInput" type="checkbox"> Авто-проверка вложений</label>
+        <label><input id="complianceAllowUserIndexInput" type="checkbox"> Разрешить user override index</label>
+      </div>
+      <label>Индекс НМД для проверки <select id="complianceIndexSelect"></select></label>
+      <div class="settings-grid">
+        <label>Generation model <select id="complianceGenerationModelInput"></select></label>
+        <label>Max files <input id="complianceMaxFilesInput" type="number" min="1"></label>
+        <label>Max file MB <input id="complianceMaxFileMbInput" type="number" min="1"></label>
+        <label>Section chars <input id="complianceSectionCharsInput" type="number" min="1500"></label>
+        <label>Max sections <input id="complianceMaxSectionsInput" type="number" min="1"></label>
+        <label>Requirement top K <input id="complianceTopKInput" type="number" min="1"></label>
+        <label>Timeout sec <input id="complianceTimeoutInput" type="number" min="60"></label>
+      </div>
+      <label>Trigger phrases <textarea id="complianceTriggerPhrasesInput" rows="4"></textarea></label>
+
+      <label><input id="ocrInput" type="checkbox"> OCR для PDF</label>
+      <div class="settings-grid ocr-settings-grid">
+        <label>OCR engine
+          <select id="ocrEngineInput">
+            <option value="easyocr">EasyOCR GPU</option>
+            <option value="auto">Auto</option>
+            <option value="tesseract">Tesseract CPU</option>
+          </select>
+        </label>
+        <label>OCR CUDA device <input id="ocrGpuDeviceInput" type="text" placeholder="0 или cuda:0"></label>
+        <label>PDF render scale <input id="pdfRenderScaleInput" type="number" min="0.1" step="0.1"></label>
+      </div>
+      <label><input id="ocrGpuInput" type="checkbox"> OCR на GPU</label>
+      <label>OCR model storage <input id="ocrModelStorageInput" type="text"></label>
+      <label>OCR languages <input id="ocrLanguagesInput" type="text"></label>
+      <button id="clearOcrCacheBtn" type="button">Очистить OCR GPU cache</button>
+      <menu>
+        <button value="cancel" data-i18n="actions.cancel">Отмена</button>
+        <button id="saveSettingsBtn" type="button" data-i18n="actions.save">Сохранить</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast is-hidden"></div>
+  <script src="/ui/assets/app.js"></script>
+</body>
+</html>

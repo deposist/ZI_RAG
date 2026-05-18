@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build bundle and publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build bundle
+        run: |
+          mkdir -p dist
+          python3 tools/build_bundle.py --output dist/openwebui_zi_rag_bundle.zip
+
+      - name: Determine release notes path
+        id: notes
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          tag="${tag#v}"
+          candidate="RELEASE_NOTES_${tag}.md"
+          if [ -f "$candidate" ]; then
+            echo "path=$candidate" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+          fi
+          major="${tag%%.*}"
+          if [ "$major" = "0" ]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "ZI_RAG ${{ github.ref_name }}"
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
+          files: dist/openwebui_zi_rag_bundle.zip
+          draft: false
+          prerelease: ${{ steps.notes.outputs.prerelease }}

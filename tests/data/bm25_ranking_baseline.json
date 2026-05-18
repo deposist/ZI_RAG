@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "top_k": 5,
+  "queries": [
+    {
+      "query": "alpha needleone",
+      "top_texts": [
+        "alpha needleone hybrid policy requirement",
+        "alpha dense policy overview",
+        "needleone exact compliance requirement",
+        "plain unrelated archive",
+        "needlefive only lexical archive"
+      ],
+      "scores": [1.0, 1.0, 0.75, 0.75, 0.75],
+      "hybrid_scores": [0.03278689, 0.03225806, 0.0305789, 0.01587302, 0.015625],
+      "sources": [
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["dense"],
+        ["dense"]
+      ]
+    },
+    {
+      "query": "beta needletwo",
+      "top_texts": [
+        "beta needletwo hybrid network evidence",
+        "beta dense network control",
+        "needletwo exact network evidence",
+        "plain unrelated archive",
+        "needlefive only lexical archive"
+      ],
+      "scores": [1.0, 1.0, 0.75, 0.75, 0.75],
+      "hybrid_scores": [0.03278689, 0.03225806, 0.03079839, 0.01587302, 0.015625],
+      "sources": [
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["dense"],
+        ["dense"]
+      ]
+    },
+    {
+      "query": "gamma needlethree",
+      "top_texts": [
+        "gamma needlethree hybrid safety requirement",
+        "gamma dense operations guide",
+        "needlethree exact safety requirement",
+        "plain unrelated archive",
+        "needlefive only lexical archive"
+      ],
+      "scores": [1.0, 1.0, 0.75, 0.75, 0.75],
+      "hybrid_scores": [0.03278689, 0.03225806, 0.03102453, 0.01587302, 0.015625],
+      "sources": [
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["dense"],
+        ["dense"]
+      ]
+    },
+    {
+      "query": "delta needlefour",
+      "top_texts": [
+        "delta needlefour hybrid maintenance requirement",
+        "delta dense maintenance guide",
+        "needlefour exact maintenance requirement",
+        "plain unrelated archive",
+        "needlefive only lexical archive"
+      ],
+      "scores": [1.0, 1.0, 0.75, 0.75, 0.75],
+      "hybrid_scores": [0.03278689, 0.03225806, 0.03125763, 0.01587302, 0.015625],
+      "sources": [
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["bm25", "dense"],
+        ["dense"],
+        ["dense"]
+      ]
+    },
+    {
+      "query": "needlefive",
+      "top_texts": [
+        "needlefive only lexical archive",
+        "plain unrelated archive",
+        "needlefour exact maintenance requirement",
+        "needlethree exact safety requirement",
+        "needletwo exact network evidence"
+      ],
+      "scores": [1.0, 1.0, 1.0, 1.0, 1.0],
+      "hybrid_scores": [0.03252247, 0.01639344, 0.01587302, 0.015625, 0.01538462],
+      "sources": [
+        ["bm25", "dense"],
+        ["dense"],
+        ["dense"],
+        ["dense"],
+        ["dense"]
+      ]
+    }
+  ]
+}
